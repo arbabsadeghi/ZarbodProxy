@@ -69,8 +69,8 @@ namespace ZarbodProxy.Controllers
             // Serialize the request data to JSON
             var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
-            // Send a PUT request to the external API
-            HttpResponseMessage response = await _httpClient.PutAsync(apiUrl, content);
+            // Send a POST request to the external API
+            HttpResponseMessage response = await _httpClient.PostAsync(apiUrl, content);
             if (response.IsSuccessStatusCode)
             {
                 // Read the response content
