@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace ZarbodProxy.Controllers
 {
@@ -8,12 +9,15 @@ namespace ZarbodProxy.Controllers
     [Route("api/[controller]")]
     public class AssetController : Controller
     {
+        private readonly ZarbodDbContext _context;
         private readonly HttpClient _httpClient;
         private IConfiguration _configuration;
-        public AssetController(HttpClient httpClient, IConfiguration configuration)
+
+        public AssetController(HttpClient httpClient, IConfiguration configuration, ZarbodDbContext context)
         {
             _httpClient = httpClient;
             this._configuration = configuration;
+            this._context = context;
         }
 
         [HttpGet("types")]
@@ -26,7 +30,18 @@ namespace ZarbodProxy.Controllers
             {
                 // Forward the successful response back to the client
                 string apiResponse = await response.Content.ReadAsStringAsync();
-                return Ok(apiResponse);
+
+                var apiLog = new ApiLog
+                {
+                    ApiName = "types",
+                    Request = "",
+                    Response = apiResponse,
+                    DateCreated = DateTime.UtcNow
+                };
+                _context.ApiLogs.Add(apiLog);
+                await _context.SaveChangesAsync();
+
+                return Content(apiResponse, "application/json");
             }
             else
             {
@@ -51,11 +66,30 @@ namespace ZarbodProxy.Controllers
                 // Read the response content
                 var apiResponse = await response.Content.ReadAsStringAsync();
 
+                var apiLog = new ApiLog
+                {
+                    ApiName = "inquiryRequest",
+                    Request = JsonConvert.SerializeObject(data),
+                    Response = apiResponse,
+                    DateCreated = DateTime.UtcNow
+                };
+                _context.ApiLogs.Add(apiLog);
+                await _context.SaveChangesAsync();
+
                 // Forward the successful response back to the client
-                return Ok(apiResponse);
+                return Content(apiResponse, "application/json");
             }
             else
             {
+                var apiLog = new ApiLog
+                {
+                    ApiName = "inquiryRequest",
+                    Request = JsonConvert.SerializeObject(data),
+                    Response = response.ReasonPhrase,
+                    DateCreated = DateTime.UtcNow
+                };
+                _context.ApiLogs.Add(apiLog);
+                await _context.SaveChangesAsync();
                 // Forward the error response back to the client
                 return StatusCode((int)response.StatusCode, await response.Content.ReadAsStringAsync());
             }
@@ -76,8 +110,18 @@ namespace ZarbodProxy.Controllers
                 // Read the response content
                 var apiResponse = await response.Content.ReadAsStringAsync();
 
+                var apiLog = new ApiLog
+                {
+                    ApiName = "inquiry",
+                    Request = JsonConvert.SerializeObject(data),
+                    Response = apiResponse,
+                    DateCreated = DateTime.UtcNow
+                };
+                _context.ApiLogs.Add(apiLog);
+                await _context.SaveChangesAsync();
+
                 // Forward the successful response back to the client
-                return Ok(apiResponse);
+                return Content(apiResponse, "application/json");
             }
             else
             {
